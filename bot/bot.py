@@ -39,6 +39,21 @@ def _result_url(scan_id: int) -> str:
     return f"{settings.SITE_URL}/result/{scan_id}/"
 
 
+def _is_public_url(url: str) -> bool:
+    """Telegram inline tugmalari faqat haqiqiy public URL'ni qabul qiladi.
+    localhost / 127.0.0.1 / 0.0.0.0 kabi lokal manzillar rad etiladi."""
+    url = (url or "").strip().lower()
+    if not (url.startswith("http://") or url.startswith("https://")):
+        return False
+    for bad in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
+        if bad in url:
+            return False
+    return True
+
+
+SITE_PUBLIC = _is_public_url(settings.SITE_URL)
+
+
 def _run_scan(file_bytes, file_name, user):
     """Sinxron skan (alohida thread'da chaqiriladi)."""
     from scanner.services.scanner_service import ScannerService
@@ -83,8 +98,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("❓ Yordam", callback_data="help"),
             InlineKeyboardButton("📊 Statistika", callback_data="stats"),
         ],
-        [InlineKeyboardButton("🌐 Veb-sayt", url=settings.SITE_URL)],
     ]
+    # Veb-sayt tugmasi faqat haqiqiy (public) domen bo'lsa qo'shiladi.
+    # localhost manzilni Telegram qabul qilmaydi.
+    if SITE_PUBLIC:
+        keyboard.append([InlineKeyboardButton("🌐 Veb-sayt", url=settings.SITE_URL)])
     await update.message.reply_text(
         text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard)
     )
@@ -182,10 +200,15 @@ async def _send_result(status_msg, scan):
         f"{safe_summary}"
     )
 
-    keyboard = [[InlineKeyboardButton("🌐 Batafsil hisobot", url=_result_url(scan.id))]]
+    # "Batafsil" tugmasi faqat public domen bo'lsa qo'shiladi (localhost ishlamaydi)
+    reply_markup = None
+    if SITE_PUBLIC:
+        reply_markup = InlineKeyboardMarkup(
+            [[InlineKeyboardButton("🌐 Batafsil hisobot", url=_result_url(scan.id))]]
+        )
 
     await status_msg.edit_text(
-        text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard)
+        text, parse_mode=ParseMode.HTML, reply_markup=reply_markup
     )
 
 
