@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MalGuard — Fayl xavfsizligini tekshirish{% endblock %}</title>
+    <meta name="description" content="Fayllarni VirusTotal, Hybrid Analysis va MalwareBazaar orqali zararli dasturlarga tekshiruvchi tizim.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'scanner:home' %}">
+            <span class="brand-icon"><i class="bi bi-shield-check"></i></span>
+            <span>MalGuard<span class="brand-sub">fayl xavfsizlik tizimi</span></span>
+        </a>
+
+        <button class="nav-toggle" id="navToggle" aria-label="Menyu"><i class="bi bi-list"></i></button>
+
+        <ul class="nav-links" id="navLinks">
+            <li><a class="nav-link {% block nav_home %}{% endblock %}" href="{% url 'scanner:home' %}"><i class="bi bi-house"></i> Bosh sahifa</a></li>
+            <li><a class="nav-link {% block nav_history %}{% endblock %}" href="{% url 'scanner:history' %}"><i class="bi bi-clock-history"></i> Tarix</a></li>
+            <li><a class="nav-link" href="/admin/"><i class="bi bi-gear"></i> Admin</a></li>
+            <li>
+                <a class="btn-tg-nav" href="https://t.me/{{ TELEGRAM_BOT_USERNAME }}" target="_blank" rel="noopener">
+                    <i class="bi bi-telegram"></i> Telegram Bot <span class="dot-live"></span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<main>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<!-- ── FOOTER ── -->
+<footer>
+    <div class="container">
+        <div class="footer-row">
+            <div class="footer-brand">
+                <i class="bi bi-shield-fill-check text-accent"></i>
+                <span>MalGuard &copy; 2025</span>
+                <span class="dot-live"></span>
+                <span class="text-safe" style="font-size:0.7rem">Online</span>
+            </div>
+            <nav class="footer-nav">
+                <a href="{% url 'scanner:home' %}">Bosh sahifa</a>
+                <a href="{% url 'scanner:history' %}">Tarix</a>
+                <a href="/admin/">Admin</a>
+                <a href="https://t.me/{{ TELEGRAM_BOT_USERNAME }}" target="_blank" rel="noopener">Telegram</a>
+            </nav>
+        </div>
+        <div class="footer-bottom">
+            VIRUSTOTAL &nbsp;·&nbsp; HYBRID ANALYSIS &nbsp;·&nbsp; MALWAREBAZAAR &nbsp;—&nbsp; O'ZBEKCHA NATIJA
+        </div>
+    </div>
+</footer>
+
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

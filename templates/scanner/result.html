@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Natija: {{ scan.file_name }} — MalGuard{% endblock %}
+
+{% block content %}
+
+<div style="max-width:900px;margin:0 auto">
+
+    <a href="{% url 'scanner:home' %}" class="btn btn-outline mb-3"><i class="bi bi-arrow-left"></i> Orqaga</a>
+
+    <!-- ── UMUMIY XULOSA ── -->
+    <div class="card card-glow mb-3">
+        <div class="card-header"><i class="bi bi-clipboard-check"></i> UMUMIY XULOSA</div>
+        <div class="card-body">
+            <div class="grid grid-2" style="align-items:center">
+                <div class="text-center">
+                    <div style="font-size:3.4rem">{{ scan.verdict_emoji }}</div>
+                    <span class="verdict verdict-{{ scan.verdict }}">{{ scan.verdict_label }}</span>
+                </div>
+                <div>
+                    <div class="mb-1"><b>Xavf darajasi: {{ scan.danger_score }}/100</b></div>
+                    <div class="meter mb-2">
+                        <div class="meter-fill lvl-{{ scan.verdict }}" style="width:{{ scan.danger_score }}%"></div>
+                    </div>
+                    <div class="text-dim" style="font-size:0.85rem">
+                        <i class="bi bi-calendar"></i> {{ scan.created_at|date:"d.m.Y H:i" }} ·
+                        <i class="bi bi-{% if scan.source == 'telegram' %}telegram{% else %}globe{% endif %}"></i> {{ scan.get_source_display }}
+                    </div>
+                </div>
+            </div>
+
+            <pre class="mt-3">{{ scan.summary_uz }}</pre>
+        </div>
+    </div>
+
+    <!-- ── FAYL MA'LUMOTLARI ── -->
+    <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-file-earmark-binary"></i> FAYL MA'LUMOTLARI</div>
+        <div class="card-body">
+            <div class="engine-row"><span class="k">Nomi</span><span class="mono">{{ scan.file_name }}</span></div>
+            <div class="engine-row"><span class="k">Hajmi</span><span class="mono">{{ scan.file_size_human }}</span></div>
+            <div class="engine-row"><span class="k">Turi</span><span class="mono">{{ scan.file_type|default:"—" }}</span></div>
+            <div class="engine-row"><span class="k">MD5</span><span class="mono" style="word-break:break-all">{{ scan.file_md5 }}</span></div>
+            <div class="engine-row"><span class="k">SHA-256</span><span class="mono" style="word-break:break-all">{{ scan.file_sha256 }}</span></div>
+        </div>
+    </div>
+
+    <!-- ── MANBALAR BO'YICHA ── -->
+    <div class="section-label"><i class="bi bi-hdd-network"></i> Manbalar bo'yicha tahlil</div>
+    <div class="grid grid-3 mb-3">
+
+        <!-- VirusTotal -->
+        <div class="engine">
+            <div class="engine-head">
+                <span class="engine-name"><i class="bi bi-shield"></i> VirusTotal</span>
+            </div>
+            {% with vt=scan.virustotal_result %}
+            {% if vt and vt.available %}
+                {% if vt.found %}
+                    <div class="engine-row"><span class="k">Xavfli</span><span class="text-red">{{ vt.malicious_count }}</span></div>
+                    <div class="engine-row"><span class="k">Shubhali</span><span class="text-warn">{{ vt.suspicious_count }}</span></div>
+                    <div class="engine-row"><span class="k">Zararsiz</span><span class="text-safe">{{ vt.harmless_count|add:vt.undetected_count }}</span></div>
+                    <div class="engine-row"><span class="k">Jami dvigatel</span><span class="mono">{{ vt.total_engines }}</span></div>
+                {% else %}
+                    <p class="text-dim" style="font-size:0.88rem">Bazada topilmadi.</p>
+                {% endif %}
+            {% else %}
+                <p class="text-dim" style="font-size:0.85rem"><i class="bi bi-dash-circle"></i> {{ vt.error|default:"Mavjud emas" }}</p>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- Hybrid Analysis -->
+        <div class="engine">
+            <div class="engine-head">
+                <span class="engine-name"><i class="bi bi-cpu"></i> Hybrid Analysis</span>
+            </div>
+            {% with ha=scan.hybrid_analysis_result %}
+            {% if ha and ha.available %}
+                {% if ha.found %}
+                    <div class="engine-row"><span class="k">Xulosa</span><span class="mono">{{ ha.verdict_raw|default:"—" }}</span></div>
+                    <div class="engine-row"><span class="k">Tahdid balli</span><span class="mono">{{ ha.threat_score }}/100</span></div>
+                    <div class="engine-row"><span class="k">AV aniqlash</span><span class="mono">{{ ha.av_detect }}%</span></div>
+                    {% if ha.threat_family %}<div class="engine-row"><span class="k">Oila</span><span class="mono">{{ ha.threat_family }}</span></div>{% endif %}
+                {% else %}
+                    <p class="text-dim" style="font-size:0.88rem">Sandbox hisobotida topilmadi.</p>
+                {% endif %}
+            {% else %}
+                <p class="text-dim" style="font-size:0.85rem"><i class="bi bi-dash-circle"></i> {{ ha.error|default:"Mavjud emas" }}</p>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- MalwareBazaar -->
+        <div class="engine">
+            <div class="engine-head">
+                <span class="engine-name"><i class="bi bi-database"></i> MalwareBazaar</span>
+            </div>
+            {% with mb=scan.malwarebazaar_result %}
+            {% if mb and mb.available %}
+                {% if mb.found %}
+                    <div class="engine-row"><span class="k">Holat</span><span class="text-red">Bazada bor!</span></div>
+                    <div class="engine-row"><span class="k">Oila</span><span class="mono">{{ mb.signature }}</span></div>
+                    {% if mb.file_type %}<div class="engine-row"><span class="k">Tur</span><span class="mono">{{ mb.file_type }}</span></div>{% endif %}
+                {% else %}
+                    <p class="text-safe" style="font-size:0.88rem"><i class="bi bi-check-circle"></i> Zararli bazada topilmadi.</p>
+                {% endif %}
+            {% else %}
+                <p class="text-dim" style="font-size:0.85rem"><i class="bi bi-dash-circle"></i> {{ mb.error|default:"Mavjud emas" }}</p>
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <!-- ── ANIQLANGAN TAHDIDLAR ── -->
+    {% if scan.detections %}
+    <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-exclamation-triangle"></i> ANIQLANGAN TAHDIDLAR ({{ scan.detections|length }})</div>
+        <div class="card-body" style="max-height:320px;overflow-y:auto">
+            {% for d in scan.detections %}
+            <div class="engine-row">
+                <span class="k">{{ d.source }}</span>
+                <span class="mono text-red">{{ d.name }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="text-center mb-4">
+        <a href="{% url 'scanner:home' %}" class="btn btn-primary"><i class="bi bi-search"></i> Yangi fayl tekshirish</a>
+        <a href="?format=json" class="btn btn-outline"><i class="bi bi-code-slash"></i> JSON ko'rinishi</a>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,16 @@
+# --- Asosiy ---
+Django>=4.2,<5.1
+python-dotenv>=1.0.1
+requests>=2.31.0
+
+# --- Telegram bot (async) ---
+python-telegram-bot>=20.7,<22
+
+# --- Statik fayllar (production) ---
+whitenoise>=6.6.0
+
+# --- Production server (ixtiyoriy) ---
+gunicorn>=21.2.0
+
+# --- PostgreSQL (ixtiyoriy; DB_ENGINE=postgres bo'lsa kerak) ---
+# psycopg2-binary>=2.9.9

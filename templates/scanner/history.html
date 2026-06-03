@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Tarix — MalGuard{% endblock %}
+{% block nav_history %}active{% endblock %}
+
+{% block content %}
+
+<section class="hero" style="padding:2.4rem 0 1.4rem">
+    <h1 style="font-size:clamp(1.6rem,4vw,2.4rem)"><span class="grad">Tekshiruvlar</span> tarixi</h1>
+    <p>Saytda va Telegram bot orqali amalga oshirilgan oxirgi tekshiruvlar.</p>
+</section>
+
+<section class="mb-4">
+    <div class="grid grid-4 mb-3">
+        <div class="card stat"><div class="num text-accent">{{ stats.total }}</div><div class="label">Jami</div></div>
+        <div class="card stat"><div class="num text-red">{{ stats.dangerous }}</div><div class="label">Xavfli</div></div>
+        <div class="card stat"><div class="num text-warn">{{ stats.suspicious }}</div><div class="label">Shubhali</div></div>
+        <div class="card stat"><div class="num text-safe">{{ stats.safe }}</div><div class="label">Xavfsiz</div></div>
+    </div>
+
+    <div class="card">
+        {% if scans %}
+        <table class="table">
+            <thead>
+                <tr><th>Fayl</th><th>Xulosa</th><th>Xavf</th><th>Hajm</th><th>Manba</th><th>Sana</th></tr>
+            </thead>
+            <tbody>
+                {% for scan in scans %}
+                <tr>
+                    <td><a href="{% url 'scanner:result' scan.id %}"><i class="bi bi-file-earmark"></i> {{ scan.file_name|truncatechars:34 }}</a></td>
+                    <td><span class="verdict verdict-{{ scan.verdict }}">{{ scan.verdict_emoji }} {{ scan.verdict_label }}</span></td>
+                    <td class="mono">{{ scan.danger_score }}/100</td>
+                    <td class="text-dim mono">{{ scan.file_size_human }}</td>
+                    <td class="text-dim"><i class="bi bi-{% if scan.source == 'telegram' %}telegram{% else %}globe{% endif %}"></i> {{ scan.get_source_display }}</td>
+                    <td class="text-dim">{{ scan.created_at|naturaltime }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="card-body text-center" style="padding:3rem 1.5rem">
+            <div style="font-size:2.6rem">📭</div>
+            <h3>Hozircha tekshiruvlar yo'q</h3>
+            <p class="text-dim mb-3">Birinchi faylni tekshirib ko'ring.</p>
+            <a href="{% url 'scanner:home' %}" class="btn btn-primary"><i class="bi bi-search"></i> Fayl tekshirish</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
