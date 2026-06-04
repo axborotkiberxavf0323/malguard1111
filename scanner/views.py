@@ -2,13 +2,16 @@
 import logging
 
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import login, logout
 from django.db.models import Count, Q
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import ensure_csrf_cookie
 
+from .forms import LoginForm, RegisterForm
 from .models import ScanResult
 from .services.scanner_service import ScannerService
 
@@ -26,9 +29,9 @@ ALLOWED_EXTENSIONS = {
 }
 
 
-def get_global_stats() -> dict:
-    """Bosh sahifa va statistika uchun umumiy ko'rsatkichlar."""
-    agg = ScanResult.objects.aggregate(
+def compute_stats(queryset) -> dict:
+    """Berilgan queryset bo'yicha statistikani hisoblaydi."""
+    agg = queryset.aggregate(
         total=Count("id"),
         dangerous=Count("id", filter=Q(verdict="dangerous")),
         suspicious=Count("id", filter=Q(verdict="suspicious")),
@@ -40,6 +43,11 @@ def get_global_stats() -> dict:
         "suspicious": agg["suspicious"] or 0,
         "safe": agg["safe"] or 0,
     }
+
+
+def get_global_stats() -> dict:
+    """Bosh sahifa va statistika uchun umumiy ko'rsatkichlar."""
+    return compute_stats(ScanResult.objects.all())
 
 
 class HomeView(View):
@@ -95,6 +103,7 @@ class ScanView(View):
                 file_name=file_name,
                 source="web",
                 file_type=file.content_type or "",
+                user=request.user if request.user.is_authenticated else None,
             )
             return JsonResponse(
                 {
@@ -162,3 +171,77 @@ class StatsAPIView(View):
 
     def get(self, request):
         return JsonResponse(get_global_stats())
+
+
+# =========================================================
+# AUTENTIFIKATSIYA (email/Gmail orqali)
+# =========================================================
+class RegisterView(View):
+    """Email (Gmail) + parol orqali ro'yxatdan o'tish."""
+
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect("scanner:dashboard")
+        return render(request, "scanner/register.html", {"form": RegisterForm()})
+
+    def post(self, request):
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, "Muvaffaqiyatli ro'yxatdan o'tdingiz! Xush kelibsiz.")
+            return redirect("scanner:dashboard")
+        return render(request, "scanner/register.html", {"form": form})
+
+
+class LoginView(View):
+    """Email (Gmail) + parol orqali kirish."""
+
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect("scanner:dashboard")
+        return render(request, "scanner/login.html", {"form": LoginForm()})
+
+    def post(self, request):
+        form = LoginForm(request.POST, request=request)
+        if form.is_valid():
+            login(request, form.user)
+            messages.success(request, "Tizimga muvaffaqiyatli kirdingiz.")
+            next_url = request.GET.get("next") or request.POST.get("next")
+            return redirect(next_url or "scanner:dashboard")
+        return render(request, "scanner/login.html", {"form": form})
+
+
+class LogoutView(View):
+    """Tizimdan chiqish."""
+
+    def post(self, request):
+        logout(request)
+        messages.info(request, "Tizimdan chiqdingiz.")
+        return redirect("scanner:home")
+
+    # Qulaylik uchun GET orqali ham chiqishga ruxsat
+    def get(self, request):
+        logout(request)
+        return redirect("scanner:home")
+
+
+class DashboardView(View):
+    """Foydalanuvchining shaxsiy kabineti — faqat o'zining statistikasi va tarixi."""
+
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+
+        my_scans = ScanResult.objects.filter(user=request.user)
+        return render(
+            request,
+            "scanner/dashboard.html",
+            {
+                "stats": compute_stats(my_scans),
+                "scans": my_scans.order_by("-created_at")[:100],
+            },
+        )

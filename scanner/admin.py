@@ -11,12 +11,14 @@ class ScanResultAdmin(admin.ModelAdmin):
         "file_name",
         "colored_verdict",
         "danger_score",
+        "user",
         "source",
         "status",
         "created_at",
     )
     list_filter = ("verdict", "status", "source", "created_at")
-    search_fields = ("file_name", "file_md5", "file_sha256", "telegram_username")
+    search_fields = ("file_name", "file_md5", "file_sha256", "telegram_username", "user__email")
+    raw_id_fields = ("user",)
     readonly_fields = (
         "file_md5",
         "file_sha1",

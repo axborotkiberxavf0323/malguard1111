@@ -28,7 +28,13 @@
         <ul class="nav-links" id="navLinks">
             <li><a class="nav-link {% block nav_home %}{% endblock %}" href="{% url 'scanner:home' %}"><i class="bi bi-house"></i> Bosh sahifa</a></li>
             <li><a class="nav-link {% block nav_history %}{% endblock %}" href="{% url 'scanner:history' %}"><i class="bi bi-clock-history"></i> Tarix</a></li>
-            <li><a class="nav-link" href="/admin/"><i class="bi bi-gear"></i> Admin</a></li>
+            {% if user.is_authenticated %}
+                <li><a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'scanner:dashboard' %}"><i class="bi bi-speedometer2"></i> Kabinet</a></li>
+                <li><a class="nav-link" href="{% url 'scanner:logout' %}"><i class="bi bi-box-arrow-right"></i> Chiqish</a></li>
+            {% else %}
+                <li><a class="nav-link {% block nav_login %}{% endblock %}" href="{% url 'scanner:login' %}"><i class="bi bi-box-arrow-in-right"></i> Kirish</a></li>
+                <li><a class="nav-link {% block nav_register %}{% endblock %}" href="{% url 'scanner:register' %}"><i class="bi bi-person-plus"></i> Ro'yxatdan o'tish</a></li>
+            {% endif %}
             <li>
                 <a class="btn-tg-nav" href="https://t.me/{{ TELEGRAM_BOT_USERNAME }}" target="_blank" rel="noopener">
                     <i class="bi bi-telegram"></i> Telegram Bot <span class="dot-live"></span>
@@ -41,6 +47,13 @@
 <!-- ── MAIN ── -->
 <main>
     <div class="container">
+        {% if messages %}
+            <div class="messages mt-2">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </div>
 </main>

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Mening kabinetim — MalGuard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+
+<section class="hero" style="padding:2.2rem 0 1.2rem">
+    <h1 style="font-size:clamp(1.6rem,4vw,2.4rem)"><span class="grad">Shaxsiy</span> kabinet</h1>
+    <p>Faqat siz tekshirgan fayllar statistikasi va tarixi.</p>
+    <div style="margin-top:1rem">
+        <span class="user-badge">
+            <span class="ava">{{ user.email|first|upper }}</span>
+            <span>{{ user.email|default:user.username }}</span>
+        </span>
+    </div>
+</section>
+
+<!-- ── SHAXSIY STATISTIKA ── -->
+<section class="mb-4">
+    <div class="section-label"><i class="bi bi-person-badge"></i> Mening statistikam</div>
+    <div class="grid grid-4">
+        <div class="card stat"><div class="num text-accent">{{ stats.total }}</div><div class="label">Jami tekshiruv</div></div>
+        <div class="card stat"><div class="num text-red">{{ stats.dangerous }}</div><div class="label">Xavfli</div></div>
+        <div class="card stat"><div class="num text-warn">{{ stats.suspicious }}</div><div class="label">Shubhali</div></div>
+        <div class="card stat"><div class="num text-safe">{{ stats.safe }}</div><div class="label">Xavfsiz</div></div>
+    </div>
+</section>
+
+<!-- ── MENING TARIXIM ── -->
+<section class="mb-4">
+    <div class="section-label"><i class="bi bi-clock-history"></i> Mening tekshiruvlarim</div>
+    <div class="card">
+        {% if scans %}
+        <table class="table">
+            <thead>
+                <tr><th>Fayl</th><th>Xulosa</th><th>Xavf</th><th>Hajm</th><th>Sana</th></tr>
+            </thead>
+            <tbody>
+                {% for scan in scans %}
+                <tr>
+                    <td><a href="{% url 'scanner:result' scan.id %}"><i class="bi bi-file-earmark"></i> {{ scan.file_name|truncatechars:34 }}</a></td>
+                    <td><span class="verdict verdict-{{ scan.verdict }}">{{ scan.verdict_emoji }} {{ scan.verdict_label }}</span></td>
+                    <td class="mono">{{ scan.danger_score }}/100</td>
+                    <td class="text-dim mono">{{ scan.file_size_human }}</td>
+                    <td class="text-dim">{{ scan.created_at|naturaltime }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="card-body text-center" style="padding:3rem 1.5rem">
+            <div style="font-size:2.6rem">📂</div>
+            <h3>Hozircha tekshiruvlaringiz yo'q</h3>
+            <p class="text-dim mb-3">Birinchi faylingizni tekshirib ko'ring — natija shu yerda saqlanadi.</p>
+            <a href="{% url 'scanner:home' %}" class="btn btn-primary"><i class="bi bi-search"></i> Fayl tekshirish</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

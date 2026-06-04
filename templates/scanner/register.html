@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Ro'yxatdan o'tish — MalGuard{% endblock %}
+{% block nav_register %}active{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="card card-glow auth-card">
+        <div class="auth-head">
+            <div class="auth-icon"><i class="bi bi-person-plus"></i></div>
+            <h2>Ro'yxatdan o'tish</h2>
+            <p>Gmail manzilingiz orqali bepul hisob yarating</p>
+        </div>
+
+        <form method="post" action="{% url 'scanner:register' %}" class="card-body" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors-top">
+                    {% for error in form.non_field_errors %}
+                        <div class="alert alert-error"><i class="bi bi-exclamation-triangle"></i> {{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="id_email">{{ form.email.label }}</label>
+                <input type="email" name="email" id="id_email" class="form-control"
+                       value="{{ form.email.value|default:'' }}" placeholder="siz@gmail.com"
+                       autocomplete="email" required>
+                {% for error in form.email.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password1">{{ form.password1.label }}</label>
+                <input type="password" name="password1" id="id_password1" class="form-control"
+                       placeholder="Kamida 6 ta belgi" autocomplete="new-password" required>
+                {% for error in form.password1.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password2">{{ form.password2.label }}</label>
+                <input type="password" name="password2" id="id_password2" class="form-control"
+                       placeholder="Parolni qayta kiriting" autocomplete="new-password" required>
+                {% for error in form.password2.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block mt-2">
+                <i class="bi bi-person-check"></i> Ro'yxatdan o'tish
+            </button>
+        </form>
+
+        <div class="auth-foot">
+            Hisobingiz bormi? <a href="{% url 'scanner:login' %}">Kirish</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

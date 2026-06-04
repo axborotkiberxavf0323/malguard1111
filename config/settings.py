@@ -129,6 +129,13 @@ USE_I18N = True
 USE_TZ = True
 
 # =========================================================
+# AUTENTIFIKATSIYA (kirish/chiqish manzillari)
+# =========================================================
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/"
+
+# =========================================================
 # STATIK VA MEDIA FAYLLAR
 # =========================================================
 STATIC_URL = "static/"

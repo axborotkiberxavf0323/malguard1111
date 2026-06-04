@@ -1,6 +1,7 @@
 """Skaner ma'lumotlar modellari."""
 import hashlib
 
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -27,6 +28,16 @@ class ScanResult(models.Model):
         ("telegram", "Telegram bot"),
         ("api", "API"),
     ]
+
+    # --- Egasi (ro'yxatdan o'tgan foydalanuvchi; web orqali) ---
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="scans",
+        verbose_name="Foydalanuvchi",
+    )
 
     # --- Fayl ma'lumotlari ---
     file_name = models.CharField(max_length=255, verbose_name="Fayl nomi")
@@ -73,6 +84,7 @@ class ScanResult(models.Model):
         indexes = [
             models.Index(fields=["file_sha256", "status"]),
             models.Index(fields=["verdict"]),
+            models.Index(fields=["user", "status"]),
         ]
 
     def __str__(self):

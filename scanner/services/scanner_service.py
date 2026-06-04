@@ -48,6 +48,7 @@ class ScannerService:
         telegram_user_id=None,
         telegram_username: str = "",
         file_type: str = "",
+        user=None,
         use_cache: bool = True,
     ) -> ScanResult:
         """Faylni tekshiradi va ScanResult yozuvini qaytaradi."""
@@ -66,7 +67,7 @@ class ScannerService:
                 logger.info("Kesh ishlatildi (SHA256=%s)", hashes["sha256"][:12])
                 return self._clone_from_cache(
                     cached, file_name, file_size, file_type, source,
-                    telegram_user_id, telegram_username, hashes,
+                    telegram_user_id, telegram_username, hashes, user,
                 )
 
         # 2) Yangi yozuv
@@ -81,6 +82,7 @@ class ScannerService:
             status="scanning",
             telegram_user_id=telegram_user_id,
             telegram_username=telegram_username or "",
+            user=user,
         )
 
         try:
@@ -135,7 +137,7 @@ class ScannerService:
     # ------------------------------------------------------------------
     def _clone_from_cache(
         self, cached, file_name, file_size, file_type, source,
-        telegram_user_id, telegram_username, hashes,
+        telegram_user_id, telegram_username, hashes, user=None,
     ) -> ScanResult:
         """Keshdagi natijani yangi yozuvga ko'chiradi (API chaqirmasdan)."""
         return ScanResult.objects.create(
@@ -149,6 +151,7 @@ class ScannerService:
             status="completed",
             telegram_user_id=telegram_user_id,
             telegram_username=telegram_username or "",
+            user=user,
             verdict=cached.verdict,
             danger_score=cached.danger_score,
             virustotal_result=cached.virustotal_result,
